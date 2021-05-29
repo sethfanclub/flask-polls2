@@ -11,14 +11,24 @@
 <body>
   <div class="navbar">
     <ul class="navlinks">
-      <li><a href="/login">Login</a></li>
-      <li><a href="/register">Register</a></li>
-      <li><a href="/"><img src="{{ url_for('static', filename='images/home-icon.png') }}" alt=""></a></li>
+      {% if g.user %} 
+        <li><a href="/logout">Logout</a></li>
+        <li><a href="/create-poll">Create</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      {% endif %}
+      <li id="home-li"><a href="/"><img src="{{ url_for('static', filename='images/home-icon.png') }}" alt="home icon"></a></li>
     </ul>
   </div>
   <div class="content">
-    {% block content %} 
-    {% endblock %}
+    {% if g.user %} 
+      <div id="current-user">Currently logged in as {{g.user[1]}}</div>
+    {% endif %}
+    <div class="main-div">
+      {% block content %} 
+      {% endblock %}
+    </div>
   </div>
 </body>
 </html>

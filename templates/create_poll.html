@@ -1,0 +1,12 @@
+{% extends 'base.html' %} 
+{% block head %} 
+  <title>New Poll</title>
+{% endblock %} 
+{% block content %} 
+  <form class="user-form" action="/create_poll" method="POST">
+    <div><div>Question:</div><input type="Question" name="Question"></div>
+    <div><div>Choice:</div><input type="text" name="choice-1"></div>
+    <div><div>Choice:</div><input type="text" name="choice-2"></div>
+    <input type="submit" value="Ask">
+  </form>
+{% endblock %}

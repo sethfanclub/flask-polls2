@@ -48,10 +48,36 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+  if g.user:
+    return redirect('/')
   if request.method == 'POST':
-    pass
+    username = request.form['username']
+    password = request.form['password']
+    cursor = mysql.connection.cursor()
+    data = cursor.execute(f"SELECT * FROM Users WHERE (username='{username}');")
+    if data:
+      user = cursor.fetchall()[0]
+    cursor.close()
+    if bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
+      session['user'] = user
+      return redirect('/')
+    else:
+      return 'Incorrect password'
   else:
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+  if g.user:
+    session.pop('user', None)
+  return redirect('/')
+
+@app.route('/create-poll')
+def create_poll():
+  if request.method == 'POST':
+    pass
+  else:  
+    return render_template('create_poll.html')
 
 @app.before_request
 def before_request():
@@ -62,3 +88,5 @@ def before_request():
 
 if __name__ == '__main__':
   app.run(debug=True)
+
+# HOW TO CREATE A FOREIGN KEY FOR QUESTION AND CHOICES TABLES IN DATABASE?
