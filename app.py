@@ -18,7 +18,10 @@ mysql = MySQL(app)
 
 @app.route('/')
 def index():
-  return render_template('index.html')
+  cursor = mysql.connection.cursor()
+  cursor.execute("SELECT * FROM Questions;")
+  polls = cursor.fetchall()
+  return render_template('index.html', polls=polls)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -34,11 +37,13 @@ def register():
       return "Passwords didn't match"
     
     cursor = mysql.connection.cursor()
-    cursor.execute("INSERT INTO Users (username, email, password) VALUES (%s, %s, %s)",(username, email, hashed_password))
-    data = cursor.execute(f"SELECT * FROM Users WHERE (username='{username}');")
-    if data:
-      user = cursor.fetchall()[0]
-    mysql.connection.commit()
+    try:
+      cursor.execute("INSERT INTO Users (username, email, password) VALUES (%s, %s, %s)",(username, email, hashed_password))
+      cursor.execute(f"SELECT * FROM Users WHERE (username='{username}');")
+      user = cursor.fetchone()
+      mysql.connection.commit()
+    except:
+      return 'Database returned an error'
     cursor.close()
     session['user'] = user
     return redirect('/')
@@ -54,9 +59,11 @@ def login():
     username = request.form['username']
     password = request.form['password']
     cursor = mysql.connection.cursor()
-    data = cursor.execute(f"SELECT * FROM Users WHERE (username='{username}');")
-    if data:
-      user = cursor.fetchall()[0]
+    try:
+      cursor.execute(f"SELECT * FROM Users WHERE (username='{username}');")
+      user = cursor.fetchone()
+    except:
+      return 'User not found'
     cursor.close()
     if bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
       session['user'] = user
@@ -72,10 +79,27 @@ def logout():
     session.pop('user', None)
   return redirect('/')
 
-@app.route('/create-poll')
+@app.route('/create-poll', methods=['GET', 'POST'])
 def create_poll():
+  if not g.user:
+    return redirect('/')
   if request.method == 'POST':
-    pass
+    question = request.form['question']
+    choice1 = request.form['choice1']
+    choice2 = request.form['choice2']
+    cursor = mysql.connection.cursor()
+    try:
+      cursor.execute(f"INSERT INTO Questions (content) VALUES ('{question}');")
+      cursor.execute(f"SELECT id FROM Questions WHERE (content='{question}');")
+      question_id = cursor.fetchone()[0]
+      cursor.execute(f"INSERT INTO Choices (question_id, content) VALUES ('{question_id}', '{choice1}');")
+      cursor.execute(f"INSERT INTO Choices (question_id, content) VALUES ('{question_id}', '{choice2}');")
+      mysql.connection.commit()
+    except:
+      return 'Database returned an error'
+    cursor.close()
+
+    return redirect('/')
   else:  
     return render_template('create_poll.html')
 
@@ -89,4 +113,4 @@ def before_request():
 if __name__ == '__main__':
   app.run(debug=True)
 
-# HOW TO CREATE A FOREIGN KEY FOR QUESTION AND CHOICES TABLES IN DATABASE?
+# POLL VOTING PAGE AND POLL AUTHORS

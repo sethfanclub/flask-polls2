@@ -3,6 +3,10 @@
   <title>Flask Polls App</title>
 {% endblock %}
 {% block content %} 
-  <table>
-  </table>
+  <div><h1>Polls</h1></div>
+  <div class="poll-list">
+    {% for poll in polls %} 
+      <a href="/vote/{{poll[0]}}">{{poll[2]}}</a>
+    {% endfor %}
+  </div>
 {% endblock %}

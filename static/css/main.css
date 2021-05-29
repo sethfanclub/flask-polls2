@@ -80,3 +80,7 @@ body {
   padding: 1.5vmin;
   color: white;
 }
+.poll-list {
+  display: flex;
+  flex-direction: column;
+}
