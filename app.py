@@ -19,9 +19,22 @@ mysql = MySQL(app)
 @app.route('/')
 def index():
   cursor = mysql.connection.cursor()
-  cursor.execute("SELECT * FROM Questions;")
+  cursor.execute("SELECT id, content,author_id FROM Questions;")
   polls = cursor.fetchall()
-  return render_template('index.html', polls=polls)
+  cursor.close()
+
+  def getUser(id):
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"SELECT * FROM Users WHERE (id='{id}');")
+    user = cursor.fetchone()
+    return user
+
+  context = {
+    'polls': polls,
+    'getUser': getUser
+  }  
+
+  return render_template('index.html', **context)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -104,22 +117,25 @@ def create_poll():
   else:  
     return render_template('create_poll.html')
 
-@app.route('/vote/<int:id>')
+@app.route('/vote/<int:id>', methods=['GET', 'POST'])
 def vote(id):
-  if not g.user:
-    return redirect('/login')
+  # if not g.user:
+  #   return redirect('/login')
   if request.method == 'POST':
-    pass
+    return redirect('/')
   else:
     cursor = mysql.connection.cursor()
     cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
     question = cursor.fetchone()
     cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
     choices = cursor.fetchall()
+    cursor.close()
+
     context = {
       'question': question,
       'choices': choices
     }
+
     return render_template('vote.html', **context)
 
 @app.before_request
@@ -132,4 +148,6 @@ def before_request():
 if __name__ == '__main__':
   app.run(debug=True)
 
-# DISPLAY POLL AUTHOR ON HOME PAGE
+
+# Increment vote count for the respective radio button (choice) pressed
+# https://www.geeksforgeeks.org/sql-checking-existing-constraints-on-a-table-using-data-dictionaries/

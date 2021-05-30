@@ -6,7 +6,7 @@
   <div><h1>Polls</h1></div>
   <div class="poll-list">
     {% for poll in polls %} 
-      <a href="/vote/{{poll[0]}}">{{poll[1]}}</a>
+      <a href="/vote/{{poll[0]}}">{{poll[1]}}</a><small>by {{getUser(poll[2])[1]}}</small>
     {% endfor %}
   </div>
 {% endblock %}
