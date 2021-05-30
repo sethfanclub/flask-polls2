@@ -1,0 +1,22 @@
+CREATE TABLE Users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  username VARCHAR(15),
+  email VARCHAR(255),
+  password VARCHAR(255)
+);
+
+CREATE TABLE Questions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  content VARCHAR(255),
+  date_created DATETIME DEFAULT NOW(),
+  author_id INT,
+  FOREIGN KEY (author_id) REFERENCES Users(id)
+);
+
+CREATE TABLE Choices (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  content VARCHAR(255),
+  question_id INT,
+  FOREIGN KEY (question_id) REFERENCES Questions(id),
+  votes INT DEFAULT 0
+);

@@ -65,7 +65,7 @@ def login():
     except:
       return 'User not found'
     cursor.close()
-    if bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
+    if bcrypt.checkpw(password.encode('utf-8'), user[3].encode('utf-8')):
       session['user'] = user
       return redirect('/')
     else:
@@ -87,9 +87,10 @@ def create_poll():
     question = request.form['question']
     choice1 = request.form['choice1']
     choice2 = request.form['choice2']
+    user_id = g.user[0]
     cursor = mysql.connection.cursor()
     try:
-      cursor.execute(f"INSERT INTO Questions (content) VALUES ('{question}');")
+      cursor.execute(f"INSERT INTO Questions (content, author_id) VALUES ('{question}', '{user_id}');")
       cursor.execute(f"SELECT id FROM Questions WHERE (content='{question}');")
       question_id = cursor.fetchone()[0]
       cursor.execute(f"INSERT INTO Choices (question_id, content) VALUES ('{question_id}', '{choice1}');")
@@ -103,6 +104,24 @@ def create_poll():
   else:  
     return render_template('create_poll.html')
 
+@app.route('/vote/<int:id>')
+def vote(id):
+  if not g.user:
+    return redirect('/login')
+  if request.method == 'POST':
+    pass
+  else:
+    cursor = mysql.connection.cursor()
+    cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
+    question = cursor.fetchone()
+    cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
+    choices = cursor.fetchall()
+    context = {
+      'question': question,
+      'choices': choices
+    }
+    return render_template('vote.html', **context)
+
 @app.before_request
 def before_request():
   g.user = None
@@ -113,4 +132,4 @@ def before_request():
 if __name__ == '__main__':
   app.run(debug=True)
 
-# POLL VOTING PAGE AND POLL AUTHORS
+# DISPLAY POLL AUTHOR ON HOME PAGE

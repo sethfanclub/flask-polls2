@@ -1,0 +1,14 @@
+{% extends 'base.html' %} 
+{% block head %} 
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vote.css')}}">
+  <title>Voting On: {{question[2]}}</title>
+{% endblock %} 
+{% block content %} 
+  <div><h1>{{question[2]}}</h1></div>
+  <form class="vote-form">
+    {% for choice in choices %}
+      <div><input type="radio" name="answer">{{choice[1]}}</div>
+    {% endfor %}
+    <div><input class="btn-submit" type="submit" value="Vote"></div>
+  </form>
+{% endblock %}
