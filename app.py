@@ -125,6 +125,7 @@ def vote(id):
 
   has_voted = False
   total_votes = 0
+  vote_stamp = request.cookies.get('vote_stamp')
 
   cursor = mysql.connection.cursor()
   try:
@@ -137,7 +138,7 @@ def vote(id):
 
   if request.method == 'POST':
     try:
-      selected_choice_id = request.form['selected_choice']
+      selected_choice_id = request.form.get('selected_choice')
     except:
       return redirect(f'/vote/{id}')
 
@@ -149,10 +150,13 @@ def vote(id):
       cursor.close()
     except:
       'Error voting'
-      
+
     has_voted = True
     for choice in choices:
       total_votes += choice[3]
+  
+  if vote_stamp:
+    return 'Already voted'
 
   context = {
     'question': question,
@@ -161,7 +165,13 @@ def vote(id):
     'total_votes': total_votes
   }
 
-  return render_template('vote.html', **context)
+  response = make_response(render_template('vote.html', **context))
+
+  if has_voted:
+    vote_stamp = os.urandom(24)
+    response.set_cookie('vote_stamp', vote_stamp)
+
+  return response
 
 @app.before_request
 def before_request():
@@ -173,4 +183,5 @@ def before_request():
 if __name__ == '__main__':
   app.run(debug=True)
 
+# Don't let user vote on same poll twice
 # https://www.geeksforgeeks.org/sql-checking-existing-constraints-on-a-table-using-data-dictionaries/
