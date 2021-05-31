@@ -7,13 +7,16 @@
 {% block content %} 
   <div><h1>{{question[1]}}</h1></div>
   <form class="vote-form" action="/vote/{{question[0]}}" method="POST">
-    {% for choice in choices %}
-    {% if not voted %}
-      <div><input type="radio" name="choice" value="{{choice[0]}}">{{choice[1]}}</div>
-    {% else %} 
+    {% if has_voted %}
+     {% for choice in choices %}
       <div>{{choice[1]}} {{choice[3]}} ({{choice[3]*100//total_votes}}%)</div>
+     {% endfor %}
+     <input id="btn-viewpolls" class="btn-submit" type="button" value="View Polls" onclick="window.location.href='/'">
+    {% else %} 
+      {% for choice in choices %}
+        <div><input type="radio" name="selected_choice" value="{{choice[0]}}">{{choice[1]}}</div>
+      {% endfor %}
+      <input class="btn-submit" type="submit" value="Vote">
     {% endif %}
-    {% endfor %}
-    <input id="btn-vote" class="btn-submit" type="submit" value="Vote">
   </form>
 {% endblock %}

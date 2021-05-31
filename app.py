@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, g
+from flask import Flask, render_template, request, redirect, session, g, make_response
 from flask_mysqldb import MySQL
 import yaml
 import bcrypt
@@ -15,6 +15,7 @@ app.config['MYSQL_PASSWORD'] = db['mysql_password']
 app.config['MYSQL_DB'] = db['mysql_db']
 
 mysql = MySQL(app)
+
 
 @app.route('/')
 def index():
@@ -119,35 +120,44 @@ def create_poll():
 
 @app.route('/vote/<int:id>', methods=['GET', 'POST'])
 def vote(id):
-  # if not g.user:
-  #   return redirect('/login')
-  voted = False
+  if not g.user:
+    return redirect('/login')
+
+  has_voted = False
   total_votes = 0
-  if request.method == 'POST':
-    try:
-      choice_id = request.form['choice']
-    except:
-      return redirect(f'/vote/{id}')
-    cursor = mysql.connection.cursor()
-    cursor.execute(f"UPDATE Choices SET votes = votes + 1 WHERE (id='{choice_id}');")
-    mysql.connection.commit()
-    cursor.close()
-    voted = True
 
   cursor = mysql.connection.cursor()
-  cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
-  question = cursor.fetchone()
-  cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
-  choices = cursor.fetchall()
-  if voted:
+  try:
+    cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
+    question = cursor.fetchone()
+    cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
+    choices = cursor.fetchall()
+  except:
+    return 'Error fetching data'
+
+  if request.method == 'POST':
+    try:
+      selected_choice_id = request.form['selected_choice']
+    except:
+      return redirect(f'/vote/{id}')
+
+    try:
+      cursor.execute(f"UPDATE Choices SET votes = votes + 1 WHERE (id='{selected_choice_id}');")
+      cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
+      choices = cursor.fetchall()
+      mysql.connection.commit()
+      cursor.close()
+    except:
+      'Error voting'
+      
+    has_voted = True
     for choice in choices:
       total_votes += choice[3]
-  cursor.close()
 
   context = {
     'question': question,
     'choices': choices,
-    'voted': voted,
+    'has_voted': has_voted,
     'total_votes': total_votes
   }
 
@@ -163,6 +173,4 @@ def before_request():
 if __name__ == '__main__':
   app.run(debug=True)
 
-
-# Increment vote count for the respective radio button (choice) pressed
 # https://www.geeksforgeeks.org/sql-checking-existing-constraints-on-a-table-using-data-dictionaries/
