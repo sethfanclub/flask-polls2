@@ -121,22 +121,37 @@ def create_poll():
 def vote(id):
   # if not g.user:
   #   return redirect('/login')
+  voted = False
+  total_votes = 0
   if request.method == 'POST':
-    return redirect('/')
-  else:
+    try:
+      choice_id = request.form['choice']
+    except:
+      return redirect(f'/vote/{id}')
     cursor = mysql.connection.cursor()
-    cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
-    question = cursor.fetchone()
-    cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
-    choices = cursor.fetchall()
+    cursor.execute(f"UPDATE Choices SET votes = votes + 1 WHERE (id='{choice_id}');")
+    mysql.connection.commit()
     cursor.close()
+    voted = True
 
-    context = {
-      'question': question,
-      'choices': choices
-    }
+  cursor = mysql.connection.cursor()
+  cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
+  question = cursor.fetchone()
+  cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
+  choices = cursor.fetchall()
+  if voted:
+    for choice in choices:
+      total_votes += choice[3]
+  cursor.close()
 
-    return render_template('vote.html', **context)
+  context = {
+    'question': question,
+    'choices': choices,
+    'voted': voted,
+    'total_votes': total_votes
+  }
+
+  return render_template('vote.html', **context)
 
 @app.before_request
 def before_request():

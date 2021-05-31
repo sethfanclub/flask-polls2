@@ -1,14 +1,19 @@
 {% extends 'base.html' %} 
 {% block head %} 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/vote.css')}}">
+  <script defer src="{{ url_for('static', filename='js/vote.js') }}"></script>
   <title>Voting On: {{question[1]}}</title>
 {% endblock %} 
 {% block content %} 
   <div><h1>{{question[1]}}</h1></div>
   <form class="vote-form" action="/vote/{{question[0]}}" method="POST">
     {% for choice in choices %}
-      <div><input type="radio" name="answer" id="{{choice[0]}}">{{choice[1]}}</div>
+    {% if not voted %}
+      <div><input type="radio" name="choice" value="{{choice[0]}}">{{choice[1]}}</div>
+    {% else %} 
+      <div>{{choice[1]}} {{choice[3]}} ({{choice[3]*100//total_votes}}%)</div>
+    {% endif %}
     {% endfor %}
-    <div><input class="btn-submit" type="submit" value="Vote"></div>
+    <input id="btn-vote" class="btn-submit" type="submit" value="Vote">
   </form>
 {% endblock %}
