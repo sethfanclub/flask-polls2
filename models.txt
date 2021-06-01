@@ -20,3 +20,13 @@ CREATE TABLE Choices (
   FOREIGN KEY (question_id) REFERENCES Questions(id),
   votes INT DEFAULT 0
 );
+
+CREATE TABLE Votes (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  voter_id INT,
+  FOREIGN KEY (voter_id) REFERENCES Users(id),
+  question_id INT,
+  FOREIGN KEY (question_id) REFERENCES Questions(id),
+  choice_id INT,
+  FOREIGN KEY (choice_id) REFERENCES Choices(id)
+);

@@ -123,40 +123,36 @@ def vote(id):
   if not g.user:
     return redirect('/login')
 
-  has_voted = False
-  total_votes = 0
-  vote_stamp = request.cookies.get('vote_stamp')
-
   cursor = mysql.connection.cursor()
-  try:
-    cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
-    question = cursor.fetchone()
-    cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
-    choices = cursor.fetchall()
-  except:
-    return 'Error fetching data'
 
   if request.method == 'POST':
     try:
-      selected_choice_id = request.form.get('selected_choice')
+      selected_choice_id = request.form['selected_choice']
     except:
       return redirect(f'/vote/{id}')
 
     try:
       cursor.execute(f"UPDATE Choices SET votes = votes + 1 WHERE (id='{selected_choice_id}');")
-      cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
-      choices = cursor.fetchall()
+      cursor.execute(f"INSERT INTO Votes (voter_id, question_id, choice_id) VALUES ({g.user[0]}, {id}, {selected_choice_id});")
       mysql.connection.commit()
-      cursor.close()
     except:
       'Error voting'
 
-    has_voted = True
-    for choice in choices:
-      total_votes += choice[3]
-  
-  if vote_stamp:
-    return 'Already voted'
+  # if request.method == 'GET':
+  has_voted = cursor.execute(f"SELECT * FROM Votes WHERE (voter_id='{g.user[0]}') AND (question_id='{id}');")
+
+  try:
+    cursor.execute(f"SELECT * FROM Questions WHERE (id='{id}');")
+    question = cursor.fetchone()
+    cursor.execute(f"SELECT * FROM Choices WHERE (question_id='{id}');")
+    choices = cursor.fetchall()
+    cursor.close()
+  except:
+    return 'Error fetching data'
+
+  total_votes = 0
+  for choice in choices:
+    total_votes += choice[3]
 
   context = {
     'question': question,
@@ -166,11 +162,6 @@ def vote(id):
   }
 
   response = make_response(render_template('vote.html', **context))
-
-  if has_voted:
-    vote_stamp = os.urandom(24)
-    response.set_cookie('vote_stamp', vote_stamp)
-
   return response
 
 @app.before_request
